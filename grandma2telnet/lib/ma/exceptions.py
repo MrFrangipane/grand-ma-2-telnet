@@ -1,0 +1,4 @@
+
+
+class MARemoteException(Exception):
+    pass
