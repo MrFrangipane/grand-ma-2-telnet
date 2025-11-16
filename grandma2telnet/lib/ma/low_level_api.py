@@ -15,7 +15,7 @@ class LowLevelApi:
         self._telnet = Telnet(
             host=self.host, port=30000,
             read_buffer_size=2048,
-            response_wait_time=.01
+            response_wait_time=.1
         )
 
         self.drive_index = -1
@@ -27,6 +27,10 @@ class LowLevelApi:
             raise ConnectionError(f'Could not connect to {self.host}')
 
         _logger.info(f"Connected to {self.host}")
+
+    def disconnect(self):
+        self._telnet.disconnect()
+        _logger.info(f"Disconnected from {self.host}")
 
     def login(self, username: str, password: str | None = None) -> None:
         if password is None:
@@ -50,6 +54,10 @@ class LowLevelApi:
         if self.current_dest != destination:
             self.current_dest = destination
             self._telnet.send('cd /\r')
+
+            if self.current_dest == "/":
+                return
+
             for path_item in destination.split('/'):
                 self._telnet.send(f'cd {path_item}\r')
 

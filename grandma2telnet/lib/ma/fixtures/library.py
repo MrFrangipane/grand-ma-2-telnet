@@ -1,10 +1,9 @@
 from dataclasses import dataclass, field
 
-from grandma2telnet.lib.fixtures.fixture import Fixture
+from grandma2telnet.lib.ma.fixtures.fixture import Fixture
 
 
 @dataclass
-class Library:
+class FixtureLibrary:
     version: str
-    fullpath: str
     fixtures: list[Fixture] = field(default_factory=list)
