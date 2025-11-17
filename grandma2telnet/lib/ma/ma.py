@@ -90,7 +90,7 @@ class MA:
         self.delete_layers(last=len(self.list_layers()))
 
     def list_fixtures(self, layer_id: int) -> list[Fixture]:
-        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id}')
+        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id + 1}')
         table_parser = self._low_level_api.list_and_parse_table()
         self._low_level_api.change_dest("/")
 
@@ -108,8 +108,6 @@ class MA:
                 type=line['FixtureType'],  # FIXME: get from library !!
                 universe=int(universe_str) if universe_str is not None else None,
                 channel=int(channel_str) if channel_str is not None else None,
-                position=Vector3(x=float(line['PosX']), y=float(line['PosY']), z=float(line['PosZ'])),
-                rotation=Vector3(x=float(line['RotX']), y=float(line['RotY']), z=float(line['RotZ'])),
             ))
 
         return fixtures

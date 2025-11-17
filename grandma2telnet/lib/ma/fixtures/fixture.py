@@ -1,10 +1,11 @@
 from dataclasses import dataclass
 
-from pythonhelpers.vector import Vector3
+from dataclasses_json import dataclass_json
 
 from grandma2telnet.lib.ma.fixtures.fixture_type import FixtureType
 
 
+@dataclass_json
 @dataclass
 class Fixture:
     id: int | None
@@ -13,6 +14,3 @@ class Fixture:
 
     universe: int | None
     channel: int | None
-
-    position: Vector3
-    rotation: Vector3
