@@ -1,13 +1,12 @@
-import re
-import os
-import shutil
 import logging
+import os
+import re
+import shutil
 
 from grandma2telnet.lib.ma.filesystem import FileSystem
 from grandma2telnet.lib.ma.fixtures.fixture import Fixture
 from grandma2telnet.lib.ma.installation import Installation
 from grandma2telnet.lib.ma.low_level_api import LowLevelApi
-from pythonhelpers.vector import Vector3
 
 _logger = logging.getLogger("MA")
 _RE_LIST_LAYERS = re.compile(pattern=r'Layer (\d+) ([^\[\(]+)')
@@ -15,20 +14,28 @@ _RE_LIST_LAYERS = re.compile(pattern=r'Layer (\d+) ([^\[\(]+)')
 
 class MA:
 
-    def __init__(self, host: str, username: str | None = None, password: str | None = None):
-        self._low_level_api = LowLevelApi(host=host)
+    def __init__(self, host: str | None = None, username: str | None = None, password: str | None = None):
+        self.host = host
+        self.username = username
+        self.password = password
+
+        self._low_level_api: LowLevelApi | None = None
         self._filesystem = FileSystem()
         self._filesystem.list_installations()
         self._installation: Installation |  None = None
 
-        if username is not None and password is not None:
-            self.connect(username, password)
+        if username is not None and password is not None and host is not None:
+            self.connect()
 
     def __enter__(self):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.disconnect()
+
+    @property
+    def is_connected(self):
+        return self._low_level_api is not None
 
     @property
     def installations(self) -> list[str]:
@@ -41,9 +48,10 @@ class MA:
         self._installation = self._filesystem.installations[version]
         _logger.info(f"Selected installation {self._installation.version}")
 
-    def connect(self, username: str, password: str):
+    def connect(self):
+        self._low_level_api = LowLevelApi(self.host)
         self._low_level_api.connect()
-        self._low_level_api.login(username, password)
+        self._low_level_api.login(self.username, self.password)
 
     def disconnect(self):
         self._low_level_api.disconnect()
@@ -71,7 +79,7 @@ class MA:
         self._low_level_api.change_dest("/")
 
         layers = dict()
-        for line in table_parser.lines:
+        for line in table_parser.lines[1:]:
             found = _RE_LIST_LAYERS.findall(line['Name'])
             if found:
                 layers[int(found[0][0])] = found[0][1]
