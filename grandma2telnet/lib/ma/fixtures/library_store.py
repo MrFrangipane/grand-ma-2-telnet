@@ -1,7 +1,7 @@
 import os.path
 
 from grandma2telnet.lib.ma.filesystem import FileSystem
-from grandma2telnet.lib.ma.fixtures.fixture import Fixture
+from grandma2telnet.lib.ma.fixtures.fixture import FixtureType
 from grandma2telnet.lib.ma.fixtures.library import FixtureLibrary
 
 
@@ -25,7 +25,7 @@ class FixtureLibraryStore:
             basename, _ = os.path.splitext(item)
             try:
                 manufacturer, name, mode = basename.split("@")
-                self.libraries[version].fixtures.append(Fixture(
+                self.libraries[version].fixtures.append(FixtureType(
                     manufacturer=manufacturer.replace("_", " ").capitalize(),
                     name=name.replace("_", " ").capitalize(),
                     mode=mode.replace("_", " ").capitalize(),

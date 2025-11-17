@@ -7,7 +7,7 @@ from pythonhelpers.cli import remove_color_and_style_special_chars
 
 
 class Telnet:
-    def __init__(self, host: str, port: int, read_buffer_size: int = 1024, response_wait_time: float = .01):
+    def __init__(self, host: str, port: int, read_buffer_size: int, response_wait_time: float):
         self.host = host
         self.port = port
         self.response_wait_time = response_wait_time

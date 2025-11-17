@@ -1,6 +1,10 @@
+import logging
 import os
 
 from grandma2telnet.lib.ma.installation import Installation
+
+
+_logger = logging.getLogger("FileSystem")
 
 
 class FileSystem:
@@ -22,5 +26,10 @@ class FileSystem:
                     version=version,
                     fullpath=os.path.abspath(fullpath)
                 )
+
+        if not self.installations:
+            _logger.warning("No installations found")
+        else:
+            _logger.info(f"Found installations: {', '.join(self.installations.keys())}")
 
         return list(self.installations.values())

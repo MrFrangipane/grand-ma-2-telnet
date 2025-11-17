@@ -1,10 +1,12 @@
 import re
 import logging
 
+from grandma2telnet.lib.ma.fixtures.fixture import Fixture
+from grandma2telnet.lib.ma.table_parser import TableParser
 from grandma2telnet.lib.telnet import Telnet
 from grandma2telnet.lib.ma.exceptions import MARemoteException
 
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger("LowLevelApi")
 _RE_ERROR = re.compile(pattern=r'Error : (.+)', flags=re.MULTILINE)
 
 
@@ -14,7 +16,7 @@ class LowLevelApi:
         self.host = host
         self._telnet = Telnet(
             host=self.host, port=30000,
-            read_buffer_size=2048,
+            read_buffer_size=9000,
             response_wait_time=.1
         )
 
@@ -34,35 +36,58 @@ class LowLevelApi:
 
     def login(self, username: str, password: str | None = None) -> None:
         if password is None:
-            response = self._telnet.send(f'Login "{username}"\r')
+            self._send(f'Login "{username}"\r')
         else:
-            response = self._telnet.send(f'Login "{username}" "{password}"\r')
-
-        error = _RE_ERROR.findall(response)
-        if error:
-            raise MARemoteException(error[0])
+            self._send(f'Login "{username}" "{password}"\r')
 
         _logger.info(f"Logged in as {username}")
 
     def set_drive(self, drive_index: int) -> None:
         if self.drive_index != drive_index:
             self.drive_index = drive_index
-            self._telnet.send(f'sd {self.drive_index}\r')
+            self._send(f'sd {self.drive_index}\r')
 
     def change_dest(self, destination: str) -> None:
-        # TODO: could minimize telnet calls by navigating intelligently
-        if self.current_dest != destination:
-            self.current_dest = destination
-            self._telnet.send('cd /\r')
+        self.current_dest = destination
+        self._send('cd /\r')
 
-            if self.current_dest == "/":
-                return
+        if self.current_dest == "/":
+            return
 
-            for path_item in destination.split('/'):
-                self._telnet.send(f'cd {path_item}\r')
+        for path_item in destination.split('/'):
+            self._send(f'cd {path_item}\r')
 
     def import_(self, item: str, position: int = None) -> None:
         if position is None:
-            self._telnet.send(f'import "{item}"\r')
+            self._send(f'import "{item}"\r')
         else:
-            self._telnet.send(f'import "{item}" At {position}\r')
+            self._send(f'import "{item}" At {position}\r')
+
+    def clear_all(self):
+        self._send('clearall\r')
+
+    def set_fixture_type(self, fixture_type_id: int, fixture_first: int, fixture_last: int | None = None):
+        if fixture_last is None:
+            self._send(f'Assign FixtureType {fixture_type_id} At Fixture {fixture_first}\r')
+        else:
+            self._send(f'Assign FixtureType {fixture_type_id} At Fixture {fixture_first} Thru {fixture_last}\r')
+
+    def list_layers(self) -> TableParser:
+        stream_lines = self.list().split('\n\r')
+        return TableParser(stream_lines[1:-1])
+
+    def list_fixtures(self, layer_id: int) -> TableParser:
+        stream_lines = self.list().split('\n\r')
+        return TableParser(stream_lines[1:-1])
+
+    def list(self):
+        return self._send('List\r')
+
+    def _send(self, command: str) -> str:
+        response = self._telnet.send(command)
+        
+        error = _RE_ERROR.findall(response)
+        if error:
+            raise MARemoteException(error[0])
+        
+        return response
