@@ -60,8 +60,8 @@ class MA:
     def import_fixtures(self, filepath: str):
         self._import_file(filepath, "fixture_layers", "EditSetup/Layers", position=1, cleanup=True)
 
-    def set_fixture_type(self, fixture_type_id: int, fixture_first: int, fixture_last: int | None = None):
-        self._low_level_api.change_dest('EditSetup')
+    def set_fixture_type(self, layer_id: int, fixture_type_id: int, fixture_first: int, fixture_last: int | None = None):
+        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id}')
         self._low_level_api.set_fixture_type(fixture_type_id, fixture_first, fixture_last)
         self._low_level_api.change_dest("/")
 
@@ -85,14 +85,22 @@ class MA:
 
         fixtures = dict()
         for line in table_parser.lines:
-            fixture_id = int(line['FixId'])
-            universe_str, channel_str = line['Patch'].split('.')
+            try:
+                fixture_id = int(line['FixId'])
+            except ValueError:
+                raise ValueError(f"Invalid fixture id: {line['FixId']} for '{line["Name"]}'") from None
+
+            if line['Patch'] == '(-)':
+                universe_str, channel_str = None, None
+            else:
+                universe_str, channel_str = line['Patch'].split('.')
+
             fixtures[fixture_id] = Fixture(
                 id=fixture_id,
                 name=line['Name'],
                 type=line['FixtureType'],  # FIXME: get from library !!
-                universe=int(universe_str),
-                channel=int(channel_str),
+                universe=int(universe_str) if universe_str is not None else None,
+                channel=int(channel_str) if channel_str is not None else None,
                 position=Vector3(x=float(line['PosX']), y=float(line['PosY']), z=float(line['PosZ'])),
                 rotation=Vector3(x=float(line['RotX']), y=float(line['RotY']), z=float(line['RotZ'])),
             )

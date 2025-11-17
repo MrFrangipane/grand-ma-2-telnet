@@ -19,17 +19,19 @@ if __name__ == '__main__':
         # ma_console.import_fixture_type(os.path.join(root, "beamz@sb220ip_stage@4_channels.xml"))
         # ma_console.import_fixture_type(os.path.join(root, "beamz_professional@nuke3@25ch_mode.xml"))
 
-        # ma_console.import_fixtures(filepath=os.path.join(root, "live-au-campo.xml"))
+        ma_console.import_fixtures(filepath=os.path.join(root, "live-au-campo.xml"))
 
         # TODO make a Layer object with fixtures() method ?
         layers = ma_console.list_layers()
         fixtures = ma_console.list_fixtures(layer_id=2)
+        pprint(fixtures)
 
-        # ma_console.set_fixture_type(
-        #     fixture_type_id=3,
-        #     fixture_first=1,
-        #     fixture_last=8
-        # )
+        ma_console.set_fixture_type(
+            layer_id=2,
+            fixture_type_id=3,
+            fixture_first=1,
+            fixture_last=len(fixtures)
+        )
 
-        pprint(layers)
+        fixtures = ma_console.list_fixtures(layer_id=2)
         pprint(fixtures)

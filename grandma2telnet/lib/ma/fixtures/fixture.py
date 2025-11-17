@@ -11,8 +11,8 @@ class Fixture:
     name: str
     type: FixtureType
 
-    universe: int
-    channel: int
+    universe: int | None
+    channel: int | None
 
     position: Vector3
     rotation: Vector3

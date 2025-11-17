@@ -68,9 +68,9 @@ class LowLevelApi:
 
     def set_fixture_type(self, fixture_type_id: int, fixture_first: int, fixture_last: int | None = None):
         if fixture_last is None:
-            self._send(f'Assign FixtureType {fixture_type_id} At Fixture {fixture_first}\r')
+            self._send(f'Assign FixtureType {fixture_type_id} At {fixture_first}\r')
         else:
-            self._send(f'Assign FixtureType {fixture_type_id} At Fixture {fixture_first} Thru {fixture_last}\r')
+            self._send(f'Assign FixtureType {fixture_type_id} At {fixture_first} Thru {fixture_last}\r')
 
     def list_layers(self) -> TableParser:
         stream_lines = self.list().split('\n\r')
