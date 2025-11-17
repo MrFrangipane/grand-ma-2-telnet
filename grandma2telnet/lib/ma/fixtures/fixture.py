@@ -7,7 +7,7 @@ from grandma2telnet.lib.ma.fixtures.fixture_type import FixtureType
 
 @dataclass
 class Fixture:
-    id: int
+    id: int | None
     name: str
     type: FixtureType
 

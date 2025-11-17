@@ -1,10 +1,9 @@
 import re
 import logging
 
-from grandma2telnet.lib.ma.fixtures.fixture import Fixture
+from grandma2telnet.lib.ma.exceptions import MARemoteException
 from grandma2telnet.lib.ma.table_parser import TableParser
 from grandma2telnet.lib.telnet import Telnet
-from grandma2telnet.lib.ma.exceptions import MARemoteException
 
 _logger = logging.getLogger("LowLevelApi")
 _RE_ERROR = re.compile(pattern=r'Error : (.+)', flags=re.MULTILINE)
@@ -21,7 +20,7 @@ class LowLevelApi:
         )
 
         self.drive_index = -1
-        self.current_dest = ""
+        self.current_dest: str | None = None
 
     def connect(self):
         self._telnet.connect()
@@ -55,7 +54,11 @@ class LowLevelApi:
             return
 
         for path_item in destination.split('/'):
-            self._send(f'cd {path_item}\r')
+            try:
+                self._send(f'cd {path_item}\r')
+            except MARemoteException:
+                self.current_dest = None
+                raise MARemoteException(f"Could not change destination to '{destination}', please check console") from None
 
     def import_(self, item: str, position: int = None) -> None:
         if position is None:
@@ -72,18 +75,22 @@ class LowLevelApi:
         else:
             self._send(f'Assign FixtureType {fixture_type_id} At {fixture_first} Thru {fixture_last}\r')
 
-    def list_layers(self) -> TableParser:
-        stream_lines = self.list().split('\n\r')
-        return TableParser(stream_lines[1:-1])
-
-    def list_fixtures(self, layer_id: int) -> TableParser:
+    def list_and_parse_table(self) -> TableParser:
         stream_lines = self.list().split('\n\r')
         return TableParser(stream_lines[1:-1])
 
     def list(self):
         return self._send('List\r')
 
+    def delete(self, first: int, last: int | None):
+        if last is None:
+            self._send(f"Delete {first} /nc\r")
+            return
+
+        self._send(f"Delete {first} Thru {last} /nc\r")
+
     def _send(self, command: str) -> str:
+        _logger.debug(f"Sending command: {command}")
         response = self._telnet.send(command)
         
         error = _RE_ERROR.findall(response)

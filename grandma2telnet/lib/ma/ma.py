@@ -67,7 +67,7 @@ class MA:
 
     def list_layers(self) -> dict[int, str]:
         self._low_level_api.change_dest('EditSetup/Layers')
-        table_parser = self._low_level_api.list_layers()
+        table_parser = self._low_level_api.list_and_parse_table()
         self._low_level_api.change_dest("/")
 
         layers = dict()
@@ -78,24 +78,31 @@ class MA:
 
         return layers
 
-    def list_fixtures(self, layer_id: int) -> dict[int, Fixture]:
-        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id}')
-        table_parser = self._low_level_api.list_fixtures(layer_id)
+    def delete_layers(self, first: int | None = None, last: int | None = None):
+        if first is None:
+            first = 1
+
+        self._low_level_api.change_dest('EditSetup/Layers')
+        self._low_level_api.delete(first + 1, last + 1)
         self._low_level_api.change_dest("/")
 
-        fixtures = dict()
-        for line in table_parser.lines:
-            try:
-                fixture_id = int(line['FixId'])
-            except ValueError:
-                raise ValueError(f"Invalid fixture id: {line['FixId']} for '{line["Name"]}'") from None
+    def delete_all_layers(self):
+        self.delete_layers(last=len(self.list_layers()))
 
+    def list_fixtures(self, layer_id: int) -> list[Fixture]:
+        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id}')
+        table_parser = self._low_level_api.list_and_parse_table()
+        self._low_level_api.change_dest("/")
+
+        fixtures = list()
+        for line in table_parser.lines:
+            fixture_id = int(line['FixId']) if line['FixId'] != '-' else None
             if line['Patch'] == '(-)':
                 universe_str, channel_str = None, None
             else:
                 universe_str, channel_str = line['Patch'].split('.')
 
-            fixtures[fixture_id] = Fixture(
+            fixtures.append(Fixture(
                 id=fixture_id,
                 name=line['Name'],
                 type=line['FixtureType'],  # FIXME: get from library !!
@@ -103,7 +110,7 @@ class MA:
                 channel=int(channel_str) if channel_str is not None else None,
                 position=Vector3(x=float(line['PosX']), y=float(line['PosY']), z=float(line['PosZ'])),
                 rotation=Vector3(x=float(line['RotX']), y=float(line['RotY']), z=float(line['RotZ'])),
-            )
+            ))
 
         return fixtures
 
