@@ -58,7 +58,7 @@ class ConsoleSelectorWidget(QGroupBox):
         if self._block_signals:
             return
 
-        Components().console_selection_info = MAConsoleSelectionInfo(
+        Components().session.console_selection_info = MAConsoleSelectionInfo(
             host = self.host.text(),
             password = self.password.text(),
             username = self.username.text(),

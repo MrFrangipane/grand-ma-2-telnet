@@ -18,7 +18,7 @@ class LowLevelApi:
         self._telnet = Telnet(
             host=self.host, port=30000,
             read_buffer_size=9000,
-            response_wait_time=.1
+            response_wait_time=.02
         )
 
         self.drive_index = -1
@@ -69,6 +69,9 @@ class LowLevelApi:
         else:
             self._send(f'import "{item}" At {position}\r')
 
+    def export(self, filename: str):
+        self._send(f'export "{filename}"\r')
+
     def clear_all(self):
         self._send('clearall\r')
 
@@ -80,7 +83,13 @@ class LowLevelApi:
 
     def list_and_parse_table(self) -> TableParser:
         stream_lines = self.list().split('\n\r')
-        return TableParser(stream_lines[1:-1])
+        first_line = 0
+        for line in stream_lines:
+            first_line += 1
+            if line.endswith('Executing : List'):
+                break
+
+        return TableParser(stream_lines[first_line:-1])
 
     def list(self):
         return self._send('List\r')
@@ -91,6 +100,12 @@ class LowLevelApi:
             return
 
         self._send(f"Delete {first} Thru {last} /nc\r")
+
+    def clear_patch(self):
+        self._send("Delete Dmx 1.1  Thru /nc\r")
+
+    def set_fixture_patch(self, fixture_id: int, patch: str):
+        self._send(f"Assign Fixture {fixture_id} DMX {patch} /nc\r")
 
     def _send(self, command: str) -> str:
         _logger.debug(f"Sending command: {command}")

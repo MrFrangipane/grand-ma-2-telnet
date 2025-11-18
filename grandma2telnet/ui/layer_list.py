@@ -30,7 +30,7 @@ class LayerListWidget(QGroupBox):
         self._block_signals = True
         Components().main_window.set_wait(True)
 
-        with MAConsole(Components().console_selection_info) as ma_console:
+        with MAConsole(Components().session.console_selection_info) as ma_console:
             layers = ma_console.list_layers()
 
         self.list.clear()

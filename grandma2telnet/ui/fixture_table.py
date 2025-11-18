@@ -54,7 +54,7 @@ class FixtureTableWidget(QGroupBox):
         self.table.setColumnCount(len(labels))
         self.table.setHorizontalHeaderLabels(labels)
 
-        with MAConsole(Components().console_selection_info) as ma_console:
+        with MAConsole(Components().session.console_selection_info) as ma_console:
             for row, fixture in enumerate(ma_console.list_fixtures(self._layer_index)):
                 self._fixture_cache[row] = fixture
 

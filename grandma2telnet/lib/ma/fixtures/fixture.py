@@ -7,10 +7,12 @@ from grandma2telnet.lib.ma.fixtures.fixture_type import MAFixtureType
 
 @dataclass_json
 @dataclass
-class Fixture:
+class MAFixture:
     id: int | None
     name: str
-    type: MAFixtureType
+    type: str  # TODO use MAFixtureType
+
+    layer_id: int
 
     universe: int | None
     channel: int | None

@@ -5,7 +5,7 @@ from dataclasses_json import dataclass_json
 
 @dataclass_json
 @dataclass
-class MAFixtureType:
-    manufacturer: str
-    name: str
-    mode: str
+class RepatchInfo:
+    universe_source: int
+    universe_target: int | None
+

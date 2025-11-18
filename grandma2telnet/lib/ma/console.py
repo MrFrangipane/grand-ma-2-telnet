@@ -4,7 +4,7 @@ import re
 import shutil
 
 from grandma2telnet.lib.ma.console_selection_info import MAConsoleSelectionInfo
-from grandma2telnet.lib.ma.fixtures.fixture import Fixture
+from grandma2telnet.lib.ma.fixtures.fixture import MAFixture
 from grandma2telnet.lib.ma.installation import MAInstallation
 from grandma2telnet.lib.ma.low_level_api import LowLevelApi
 
@@ -58,6 +58,9 @@ class MAConsole:
     def import_fixtures(self, filepath: str):
         self._import_file(filepath, "fixture_layers", "EditSetup/Layers", position=1, cleanup=True)
 
+    def export_fixtures(self, filepath: str):
+        self._export_file(filepath, "fixture_layers", "EditSetup/Layers")
+
     def set_fixture_type(self, layer_id: int, fixture_type_id: int, fixture_first: int, fixture_last: int | None = None):
         self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id + 1}')
         self._low_level_api.set_fixture_type(fixture_type_id, fixture_first, fixture_last)
@@ -70,9 +73,13 @@ class MAConsole:
 
         layers = dict()
         for line in table_parser.lines[1:]:
-            found = _RE_LIST_LAYERS.findall(line['Name'])
+            if 'Name' not in line:
+                table_parser.print_debug()
+                raise ValueError("Could not parse layers")
+
+            found = _RE_LIST_LAYERS.findall(line.get('Name', ''))
             if found:
-                layers[int(found[0][0])] = found[0][1]
+                layers[int(found[0][0]) - 1] = found[0][1]
 
         return layers
 
@@ -87,7 +94,7 @@ class MAConsole:
     def delete_all_layers(self):
         self.delete_layers(last=len(self.list_layers()))
 
-    def list_fixtures(self, layer_id: int) -> list[Fixture]:
+    def list_fixtures(self, layer_id: int) -> list[MAFixture]:
         self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id + 1}')
         table_parser = self._low_level_api.list_and_parse_table()
         self._low_level_api.change_dest("/")
@@ -100,15 +107,22 @@ class MAConsole:
             else:
                 universe_str, channel_str = line['Patch'].split('.')
 
-            fixtures.append(Fixture(
+            fixtures.append(MAFixture(
                 id=fixture_id,
                 name=line['Name'],
                 type=line['FixtureType'],  # FIXME: get from library !!
+                layer_id=layer_id,
                 universe=int(universe_str) if universe_str is not None else None,
                 channel=int(channel_str) if channel_str is not None else None,
             ))
 
         return fixtures
+
+    def clear_patch(self):
+        self._low_level_api.clear_patch()
+
+    def set_fixture_patch(self, fixture_id: int, patch: str):
+        self._low_level_api.set_fixture_patch(fixture_id, patch)
 
     # FIXME move to low lovel API ? (or create a "mid-level" one ?)
     def _import_file(self, filepath: str, installation_folder: str, destination: str, position: int | None = None, cleanup: bool = False):
@@ -116,9 +130,9 @@ class MAConsole:
             raise ValueError("Installation not set")
 
         filename = os.path.splitext(os.path.basename(filepath))[0]
-        file_destination = os.path.join(getattr(self._installation, installation_folder), filename + ".xml")
+        installation_filepath = os.path.join(getattr(self._installation, installation_folder), filename + ".xml")
 
-        shutil.copy(filepath, file_destination)
+        shutil.copy(filepath, installation_filepath)
 
         self._low_level_api.set_drive(1)
         self._low_level_api.change_dest(destination)
@@ -127,4 +141,21 @@ class MAConsole:
         self._low_level_api.change_dest("/")
 
         if cleanup:
-            os.remove(file_destination)
+            os.remove(installation_filepath)
+
+    def _export_file(self, filepath: str, installation_folder: str, destination: str, cleanup: bool = False):
+        if self._installation is None:
+            raise ValueError("Installation not set")
+
+        filename = os.path.splitext(os.path.basename(filepath))[0]
+        installation_filepath = os.path.join(getattr(self._installation, installation_folder), filename + ".xml")
+
+        self._low_level_api.set_drive(1)
+        self._low_level_api.change_dest(destination)
+        self._low_level_api.export(filename)
+
+        self._low_level_api.change_dest("/")
+
+        shutil.copy(installation_filepath, filepath)
+        if cleanup:
+            os.remove(installation_filepath)

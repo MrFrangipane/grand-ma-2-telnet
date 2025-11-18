@@ -1,20 +1,20 @@
 import os.path
 
 from grandma2telnet.lib.ma.fixtures.fixture import MAFixtureType
-from grandma2telnet.lib.ma.fixtures.library import FixtureLibrary
+from grandma2telnet.lib.ma.fixtures.library import MAFixtureLibrary
 from grandma2telnet.lib.ma.installation_store import MAInstallationStore
 
 
 class MAFixtureLibraryStore:
     def __init__(self):
-        self.libraries: dict[str, FixtureLibrary] = dict()
+        self.libraries: dict[str, MAFixtureLibrary] = dict()
         self._installation_store = MAInstallationStore()
 
     def list_libraries(self):
         self.libraries = dict()
         self._installation_store.list_installations()
         for installation in self._installation_store.installations.values():
-            self.libraries[installation.version] = FixtureLibrary(version=installation.version)
+            self.libraries[installation.version] = MAFixtureLibrary(version=installation.version)
 
     def load_library(self, version: str):
         if version not in self.libraries:

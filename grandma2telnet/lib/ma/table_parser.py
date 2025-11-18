@@ -17,6 +17,9 @@ class TableParser:
         self._headers = self._parse_headers()
         self.lines = self._parse_lines()
 
+    def print_debug(self):
+        print("\n".join(self._stream_lines))
+
     @property
     def headers(self) -> list[str]:
         return [header.name for header in self._headers]

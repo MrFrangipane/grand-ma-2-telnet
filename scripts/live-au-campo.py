@@ -1,4 +1,3 @@
-from pprint import pprint
 import logging
 import os.path
 import sys
@@ -6,37 +5,42 @@ import sys
 from grandma2telnet.lib import MAConsole, MAConsoleSelectionInfo, MAInstallationStore
 
 
-if __name__ == '__main__':
-    root = sys.argv[1]
-
-    logging.basicConfig(level=logging.INFO)
-
+def import_xml_from_capture(console_selection_info):
     installation_store = MAInstallationStore()
     installations = installation_store.list_installations()
 
-    with MAConsole(MAConsoleSelectionInfo(host='127.0.0.1', username='administrator', password='admin')) as ma_console:
+    with MAConsole(console_selection_info) as ma_console:
         ma_console.set_installation(installations[-1])
+        ma_console.delete_all_layers()
+        ma_console.import_fixtures(filepath=os.path.join(root, "live-au-campo.xml"))
 
+
+def export_xml_for_capture(console_selection_info):
+    installation_store = MAInstallationStore()
+    installations = installation_store.list_installations()
+
+    with MAConsole(console_selection_info) as ma_console:
+        ma_console.set_installation(installations[-1])
+        ma_console.export_fixtures(filepath=os.path.join(root, "live-au-campo-for-capture.xml"))
+
+
+def import_fixtures_types(console_selection_info):
+    installation_store = MAInstallationStore()
+    installations = installation_store.list_installations()
+
+    with MAConsole(console_selection_info) as ma_console:
+        ma_console.set_installation(installations[-1])
         ma_console.import_fixture_type(os.path.join(root, "beamz@nereid380b_outdoor@18_channels.xml"))
         ma_console.import_fixture_type(os.path.join(root, "beamz@sb220ip_stage@4_channels.xml"))
         ma_console.import_fixture_type(os.path.join(root, "beamz_professional@nuke3@25ch_mode.xml"))
 
-        ma_console.delete_all_layers()
-        ma_console.import_fixtures(filepath=os.path.join(root, "live-au-campo.xml"))
 
-        # TODO make a Layer object with fixtures() method ?
-        layers = ma_console.list_layers()
-        pprint(ma_console.list_fixtures(layer_id=1))
+if __name__ == '__main__':
+    root = sys.argv[1]
+    logging.basicConfig(level=logging.INFO)
 
-        fixtures = ma_console.list_fixtures(layer_id=2)
-        pprint(fixtures)
+    local_console = MAConsoleSelectionInfo(host='127.0.0.1', username='administrator', password='admin')
 
-        ma_console.set_fixture_type(
-            layer_id=2,
-            fixture_type_id=3,
-            fixture_first=1,
-            fixture_last=len(fixtures)
-        )
-
-        fixtures = ma_console.list_fixtures(layer_id=2)
-        pprint(fixtures)
+    # import_fixtures_types(local_console)
+    # import_xml_from_capture(local_console)
+    export_xml_for_capture(local_console)
