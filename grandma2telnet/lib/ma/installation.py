@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class Installation:
+class MAInstallation:
     version: str
     fullpath: str
 

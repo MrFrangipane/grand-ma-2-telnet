@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 
 @dataclass
-class FixtureType:
+class MAFixtureType:
     manufacturer: str
     name: str
     mode: str

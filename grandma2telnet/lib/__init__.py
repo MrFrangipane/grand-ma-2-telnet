@@ -1,12 +1,16 @@
-from grandma2telnet.lib.ma.ma import MA
-from grandma2telnet.lib.ma.fixtures.fixture import FixtureType
-from grandma2telnet.lib.ma.installation import Installation
-from grandma2telnet.lib.ma.fixtures.library_store import FixtureLibraryStore
+from grandma2telnet.lib.ma.console import MAConsole
+from grandma2telnet.lib.ma.console_selection_info import MAConsoleSelectionInfo
+from grandma2telnet.lib.ma.fixtures.fixture import MAFixtureType
+from grandma2telnet.lib.ma.fixtures.library_store import MAFixtureLibraryStore
+from grandma2telnet.lib.ma.installation import MAInstallation
+from grandma2telnet.lib.ma.installation_store import MAInstallationStore
 
 
 __all__ = [
-    'FixtureType',
-    'FixtureLibraryStore',
-    'Installation',
-    'MA',
+    'MAConsole',
+    'MAConsoleSelectionInfo',
+    'MAFixtureLibraryStore',
+    'MAFixtureType',
+    'MAInstallation',
+    'MAInstallationStore',
 ]

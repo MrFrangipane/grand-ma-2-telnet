@@ -1,3 +1,5 @@
+import time
+
 import re
 import logging
 
@@ -23,11 +25,12 @@ class LowLevelApi:
         self.current_dest: str | None = None
 
     def connect(self):
+        now = time.time()
         self._telnet.connect()
         if not self._telnet.connected:
             raise ConnectionError(f'Could not connect to {self.host}')
 
-        _logger.info(f"Connected to {self.host}")
+        _logger.info(f"Connected to {self.host} in {time.time() - now:.2f}s")
 
     def disconnect(self):
         self._telnet.disconnect()

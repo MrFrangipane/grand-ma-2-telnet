@@ -3,28 +3,23 @@ import os
 import re
 import shutil
 
-from grandma2telnet.lib.ma.filesystem import FileSystem
+from grandma2telnet.lib.ma.console_selection_info import MAConsoleSelectionInfo
 from grandma2telnet.lib.ma.fixtures.fixture import Fixture
-from grandma2telnet.lib.ma.installation import Installation
+from grandma2telnet.lib.ma.installation import MAInstallation
 from grandma2telnet.lib.ma.low_level_api import LowLevelApi
 
 _logger = logging.getLogger("MA")
 _RE_LIST_LAYERS = re.compile(pattern=r'Layer (\d+) ([^\[\(]+)')
 
 
-class MA:
-
-    def __init__(self, host: str | None = None, username: str | None = None, password: str | None = None):
-        self.host = host
-        self.username = username
-        self.password = password
+class MAConsole:
+    def __init__(self, connection_info: MAConsoleSelectionInfo | None = None):
+        self.console_selection_info = connection_info
 
         self._low_level_api: LowLevelApi | None = None
-        self._filesystem = FileSystem()
-        self._filesystem.list_installations()
-        self._installation: Installation |  None = None
+        self._installation: MAInstallation | None = None
 
-        if username is not None and password is not None and host is not None:
+        if self.console_selection_info is not None:
             self.connect()
 
     def __enter__(self):
@@ -37,24 +32,19 @@ class MA:
     def is_connected(self):
         return self._low_level_api is not None
 
-    @property
-    def installations(self) -> list[str]:
-        return list(self._filesystem.installations.keys())
-
-    def set_installation(self, version: str):
-        if version not in self.installations:
-            raise ValueError(f"Version {version} not found")
-
-        self._installation = self._filesystem.installations[version]
-        _logger.info(f"Selected installation {self._installation.version}")
+    def set_installation(self, installation: MAInstallation):
+        self._installation = installation
+        self.console_selection_info.version = installation.version
+        _logger.info(f"Selected installation {installation.version}")
 
     def connect(self):
-        self._low_level_api = LowLevelApi(self.host)
+        self._low_level_api = LowLevelApi(self.console_selection_info.host)
         self._low_level_api.connect()
-        self._low_level_api.login(self.username, self.password)
+        self._low_level_api.login(self.console_selection_info.username, self.console_selection_info.password)
 
     def disconnect(self):
         self._low_level_api.disconnect()
+        self._low_level_api = None
 
     def add_fixture_type(self, fixture_type_name: str):
         self._low_level_api.set_drive(1)
@@ -69,7 +59,7 @@ class MA:
         self._import_file(filepath, "fixture_layers", "EditSetup/Layers", position=1, cleanup=True)
 
     def set_fixture_type(self, layer_id: int, fixture_type_id: int, fixture_first: int, fixture_last: int | None = None):
-        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id}')
+        self._low_level_api.change_dest(f'EditSetup/Layers/{layer_id + 1}')
         self._low_level_api.set_fixture_type(fixture_type_id, fixture_first, fixture_last)
         self._low_level_api.change_dest("/")
 

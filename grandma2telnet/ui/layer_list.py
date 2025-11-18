@@ -1,8 +1,8 @@
 from PySide6.QtWidgets import QGroupBox, QListWidget, QGridLayout, QPushButton
 
-from grandma2telnet.lib.ma.exceptions import MARemoteException
 from pyside6helpers import icons
 
+from grandma2telnet.lib import MAConsole
 from grandma2telnet.ui.components import Components
 
 
@@ -30,15 +30,9 @@ class LayerListWidget(QGroupBox):
         self._block_signals = True
         Components().main_window.set_wait(True)
 
-        ma_console = Components().ma_console
-        if not ma_console.is_connected:
-            try:
-                ma_console.connect()
-            except MARemoteException:
-                self._block_signals = False
-                return
+        with MAConsole(Components().console_selection_info) as ma_console:
+            layers = ma_console.list_layers()
 
-        layers = ma_console.list_layers()
         self.list.clear()
         self.list.addItems(list(layers.values()))
 

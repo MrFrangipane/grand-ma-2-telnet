@@ -1,17 +1,17 @@
 import logging
 import os
 
-from grandma2telnet.lib.ma.installation import Installation
+from grandma2telnet.lib.ma.installation import MAInstallation
 
 
-_logger = logging.getLogger("FileSystem")
+_logger = logging.getLogger("InstallationStore")
 
 
-class FileSystem:
+class MAInstallationStore:
     def __init__(self):
-        self.installations: dict[str, Installation] = dict()
+        self.installations: dict[str, MAInstallation] = dict()
 
-    def list_installations(self) -> list[Installation]:
+    def list_installations(self) -> list[MAInstallation]:
         self.installations = dict()
 
         root_installation_path = os.path.expandvars("%PROGRAMDATA%\\MA Lighting Technologies\\grandma")
@@ -22,7 +22,7 @@ class FileSystem:
             fullpath = os.path.join(root_installation_path, item)
             if os.path.isdir(fullpath) and item.startswith("gma2_"):
                 version = item.split("_")[-1]
-                self.installations[version] = Installation(
+                self.installations[version] = MAInstallation(
                     version=version,
                     fullpath=os.path.abspath(fullpath)
                 )
