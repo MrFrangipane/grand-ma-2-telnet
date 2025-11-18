@@ -9,7 +9,8 @@ from grandma2telnet.ui.components import Components
 
 class SessionWidget(QGroupBox):
 
-    _filename = "session.json"
+    _session_filename = "session.json"
+    _csv_patch_filename = "csv_patch.csv"
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -36,13 +37,19 @@ class SessionWidget(QGroupBox):
             QAbstractItemView.EditKeyPressed |
             QAbstractItemView.AnyKeyPressed
         )
-        self.table_repatch.itemChanged.connect(self._on_repatch_item_changed)
+        self.table_repatch.itemChanged.connect(self._repatch_item_changed)
         layout.addWidget(self.table_repatch)
 
         self.button_repatch_console = QPushButton("Repatch console")
         self.button_repatch_console.setIcon(icons.upload())
         self.button_repatch_console.clicked.connect(self._repatch_console)
         layout.addWidget(self.button_repatch_console)
+
+        self.button_make_csv = QPushButton("Make CSV")
+        self.button_make_csv.setIcon(icons.cells())
+        self.button_make_csv.clicked.connect(self._make_csv)
+        layout.addWidget(self.button_make_csv)
+
 
     def _from_console(self):
         if Components().session.fixtures:
@@ -52,7 +59,7 @@ class SessionWidget(QGroupBox):
         Components().main_window.set_wait(True)
 
         Components().session.from_console()
-        SessionStore().save(Components().session, self._filename)
+        SessionStore().save(Components().session, self._session_filename)
         self._update_repatch_table()
 
         Components().main_window.set_wait(False)
@@ -64,7 +71,7 @@ class SessionWidget(QGroupBox):
 
         Components().main_window.set_wait(True)
 
-        Components().session = SessionStore().load(self._filename)
+        Components().session = SessionStore().load(self._session_filename)
         self._update_repatch_table()
 
         Components().main_window.set_wait(False)
@@ -88,8 +95,13 @@ class SessionWidget(QGroupBox):
             self.table_repatch.setItem(row, 0, source_item)
             self.table_repatch.setItem(row, 1, QTableWidgetItem(str(repatch_info.universe_target)))
 
-    def _on_repatch_item_changed(self, item: QTableWidgetItem):
+    def _repatch_item_changed(self, item: QTableWidgetItem):
         row = item.row()
         value = int(item.text()) if item.text() else None
         Components().session.repatch_items[row].universe_target = value
-        SessionStore().save(Components().session, self._filename)
+        SessionStore().save(Components().session, self._session_filename)
+
+    def _make_csv(self):
+        Components().main_window.set_wait(True)
+        Components().session.make_csv_patch(self._csv_patch_filename)
+        Components().main_window.set_wait(False)

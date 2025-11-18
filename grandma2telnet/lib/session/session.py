@@ -1,5 +1,4 @@
-import time
-
+import csv
 import logging
 
 from dataclasses import dataclass, field
@@ -64,3 +63,13 @@ class Session:
                 ma_console.set_fixture_patch(fixture.id, target_patch)
 
                 _logger.info(f"Repatched {fixture.name} [{fixture.id}] to {target_patch}")
+
+    def make_csv_patch(self, filename: str):
+        repatch_dict = {repatch.universe_source: repatch.universe_target for repatch in self.repatch_items}
+        with open(filename, mode="w", newline="", encoding="utf-8") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Channel", "Patch"])
+            for fixture in self.fixtures:
+                target_universe = repatch_dict.get(fixture.universe)
+                patch = f"{target_universe}.{fixture.channel}" if target_universe else ""
+                writer.writerow([fixture.id, patch])
